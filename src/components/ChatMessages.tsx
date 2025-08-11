@@ -3,6 +3,11 @@
 import { useEffect, useRef } from 'react';
 import { UserCircleIcon, SparklesIcon, DocumentIcon } from '@heroicons/react/24/solid';
 import { Message } from '@/types/chat';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import type { Components } from 'react-markdown';
+import type { DetailedHTMLProps, HTMLAttributes, ReactNode } from 'react';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -22,6 +27,37 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  type CodeProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
+    inline?: boolean;
+    className?: string;
+    children?: ReactNode;
+  };
+
+  // Typed markdown renderers to enforce wrapping
+  const markdownComponents: Components = {
+    p({ ...props }) {
+      return <p className="whitespace-pre-wrap break-words leading-relaxed" {...props} />;
+    },
+    pre({ ...props }) {
+      return <pre className="whitespace-pre-wrap break-words" {...props} />;
+    },
+    code(props) {
+      const { inline, className, children, ...rest } = props as CodeProps;
+      if (inline) {
+        return (
+          <code className={`break-words ${className ?? ''}`} {...rest}>
+            {children}
+          </code>
+        );
+      }
+      return (
+        <code className={`break-words whitespace-pre-wrap ${className ?? ''}`} {...rest}>
+          {children}
+        </code>
+      );
+    },
   };
 
   return (
@@ -88,19 +124,15 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
                   }`}
                 >
                   {/* Message text */}
-                  <div className={`prose prose-sm max-w-none ${
-                    message.sender === 'user' 
-                      ? 'prose-invert' 
-                      : 'prose-gray prose-invert'
-                  }`}>
-                    {message.text.split('\n').map((line, lineIndex) => (
-                      <p key={lineIndex} className={`${
-                        message.sender === 'user' ? 'mb-0' : 'mb-4 last:mb-0'
-                      } leading-relaxed`}>
-                        {line || '\u00A0'}
-                      </p>
-                    ))}
-                  </div>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                    className={`prose prose-sm max-w-none break-words whitespace-pre-wrap ${
+                      message.sender === 'user' ? 'prose-invert' : 'prose-gray prose-invert'
+                    }`}
+                    components={markdownComponents}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
                 </div>
                 
                 {/* Timestamp */}

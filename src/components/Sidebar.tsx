@@ -29,26 +29,7 @@ interface SidebarProps {
 export function Sidebar({ onNewChat, onSelectChat, currentChatId }: SidebarProps) {
   const { data: session } = useSession();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      title: 'Getting started with AI',
-      lastMessage: 'How can I help you today?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    },
-    {
-      id: '2',
-      title: 'File upload question',
-      lastMessage: 'I can help you analyze that document.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: '3',
-      title: 'Code review assistance',
-      lastMessage: 'Let me review your code for you.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    },
-  ]);
+  const [chats, setChats] = useState<Chat[]>([]);
 
   const formatTime = (date: Date) => {
     const now = new Date();
@@ -172,15 +153,7 @@ export function Sidebar({ onNewChat, onSelectChat, currentChatId }: SidebarProps
         <div className="border-t border-gray-800 p-4">
           {session?.user && (
             <div className={`flex items-center space-x-3 ${isCollapsed ? 'justify-center' : ''}`}>
-              {session.user.image ? (
-                <img
-                  src={session.user.image}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full flex-shrink-0"
-                />
-              ) : (
-                <UserCircleIcon className="w-8 h-8 text-gray-400 flex-shrink-0" />
-              )}
+              <UserCircleIcon className="w-8 h-8 text-gray-400 flex-shrink-0" />
               
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
