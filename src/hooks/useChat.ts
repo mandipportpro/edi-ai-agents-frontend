@@ -12,6 +12,18 @@ export function useChat() {
     isStreaming: false,
   });
 
+  // Simple robust ID generator to avoid collisions
+  const generateId = useCallback(() => {
+    try {
+      if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+        return crypto.randomUUID();
+      }
+    } catch {
+      // ignore
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }, []);
+
   // Persist a session_id for this client
   const sessionIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -37,7 +49,7 @@ export function useChat() {
   const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...message,
-      id: Date.now().toString(),
+      id: generateId(),
       timestamp: new Date(),
     };
 
@@ -47,7 +59,7 @@ export function useChat() {
     }));
 
     return newMessage.id;
-  }, []);
+  }, [generateId]);
 
   const updateMessage = useCallback((id: string, text: string) => {
     setChatState(prev => ({
@@ -82,7 +94,7 @@ export function useChat() {
       const formData = new FormData();
       formData.append('message', text);
 
-      const appName = process.env.NEXT_PUBLIC_APP_NAME || 'EDI_AGENT_APP';
+      const appName = process.env.NEXT_PUBLIC_APP_NAME || 'edi_agent';
       formData.append('app_name', appName);
 
       const envUserId = process.env.NEXT_PUBLIC_CHAT_USER_ID;
@@ -111,7 +123,7 @@ export function useChat() {
       const response = await fetch(`${baseUrl}/api/chat`, {
         method: 'POST',
         body: formData,
-        redirect: "follow",
+        redirect: 'follow',
       });
 
       console.log('response', response);

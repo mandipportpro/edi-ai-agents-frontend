@@ -165,12 +165,12 @@ export function ChatInput({ onSendMessage, isLoading, isStreaming }: ChatInputPr
         </div>
 
         {/* Helper text */}
-        <div className="mt-2 text-xs text-gray-500 text-center">
+        {/* <div className="mt-2 text-xs text-gray-500 text-center">
           {input.length > 0 && (
             <span className="mr-4">{input.length} characters</span>
           )}
           Supports text, PDFs, images, and more • Max 10MB • Shift+Enter for new line
-        </div>
+        </div> */}
       </div>
     </div>
   );
