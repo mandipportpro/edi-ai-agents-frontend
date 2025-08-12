@@ -243,13 +243,55 @@ export function useChat() {
     [addMessage, updateMessage, session?.user?.email]
   );
 
-  const clearChat = useCallback(() => {
-    setChatState({
-      messages: [],
-      isLoading: false,
-      isStreaming: false,
-    });
-  }, []);
+  const clearChat = useCallback(async () => {
+    try {
+      const appName = process.env.NEXT_PUBLIC_APP_NAME || "edi_agent";
+
+      const envUserId = process.env.NEXT_PUBLIC_CHAT_USER_ID;
+      const userId = envUserId || session?.user?.email || "";
+
+      const envSessionId = process.env.NEXT_PUBLIC_CHAT_SESSION_ID;
+      const sessionId = envSessionId || sessionIdRef.current || "";
+
+      const baseUrl =
+        process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
+
+      if (sessionId && userId) {
+        const response = await fetch(`${baseUrl}/api/chat/clear`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            user_id: userId,
+            app_name: appName,
+          }),
+        });
+
+        if (!response.ok) {
+          // Log the error body for diagnostics but still clear locally
+          try {
+            const errText = await response.text();
+            console.error("Failed to clear chat session:", errText);
+          } catch {
+            console.error("Failed to clear chat session");
+          }
+        }
+      } else {
+        console.warn(
+          "Missing sessionId or userId when attempting to clear chat session"
+        );
+      }
+    } catch (error) {
+      console.error("Error clearing chat session:", error);
+    } finally {
+      // Always reset local state so the UI clears immediately
+      setChatState({
+        messages: [],
+        isLoading: false,
+        isStreaming: false,
+      });
+    }
+  }, [session?.user?.email]);
 
   return {
     messages: chatState.messages,
