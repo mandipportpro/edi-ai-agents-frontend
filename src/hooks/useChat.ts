@@ -29,7 +29,7 @@ export function useChat() {
       const app_name = process.env.NEXT_PUBLIC_APP_NAME || "edi_agent";
       const user_id = session?.user?.email || "";
       fetch(
-        `/api/chat/history?session_id=${encodeURIComponent(sessionId)}&app_name=${encodeURIComponent(app_name)}&user_id=${encodeURIComponent(user_id)}`
+        `/api/chat?session_id=${encodeURIComponent(sessionId)}&app_name=${encodeURIComponent(app_name)}&user_id=${encodeURIComponent(user_id)}`
       )
         .then((response) => {
           console.log("response", response);
@@ -254,12 +254,9 @@ export function useChat() {
       const envSessionId = process.env.NEXT_PUBLIC_CHAT_SESSION_ID;
       const sessionId = envSessionId || sessionIdRef.current || "";
 
-      const baseUrl =
-        process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
-
       if (sessionId && userId) {
-        const response = await fetch(`${baseUrl}/api/chat/clear`, {
-          method: "POST",
+        const response = await fetch(`/api/chat`, {
+          method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             session_id: sessionId,
