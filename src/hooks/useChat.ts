@@ -28,11 +28,8 @@ export function useChat() {
     (sessionId: string) => {
       const app_name = process.env.NEXT_PUBLIC_APP_NAME || "edi_agent";
       const user_id = session?.user?.email || "";
-      const baseUrl =
-        process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
-      console.log("baseUrl", baseUrl);
       fetch(
-        `${baseUrl}/api/chat/history?session_id=${sessionId}&app_name=${app_name}&user_id=${user_id}`
+        `/api/chat/history?session_id=${encodeURIComponent(sessionId)}&app_name=${encodeURIComponent(app_name)}&user_id=${encodeURIComponent(user_id)}`
       )
         .then((response) => {
           console.log("response", response);

@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
 
-export async function POST(req: Request): Promise<Response> {
+export async function GET(req: Request): Promise<Response> {
   try {
     let apiBase =
       process.env.CHAT_API_URL ||
@@ -15,37 +15,39 @@ export async function POST(req: Request): Promise<Response> {
 
     const apiKey = process.env.X_API_KEY;
 
-    const formData = await req.formData();
+    const url = new URL(req.url);
+    const upstreamUrl = new URL('/api/chat/history', apiBase);
+    // Forward all original query params
+    url.searchParams.forEach((value, key) => {
+      upstreamUrl.searchParams.set(key, value);
+    });
 
-    const upstreamResponse = await fetch(`${apiBase}/api/chat`, {
-      method: 'POST',
+    const upstreamResponse = await fetch(upstreamUrl.toString(), {
+      method: 'GET',
       headers: {
-        Accept: 'text/event-stream, text/plain, application/json',
+        Accept: 'application/json',
         ...(apiKey ? { 'X-API-KEY': apiKey } : {}),
       },
-      body: formData,
       cache: 'no-store',
-      // @ts-expect-error Node fetch streaming
-      duplex: 'half',
     });
 
     const headers = new Headers();
-    const contentType =
-      upstreamResponse.headers.get('content-type') || 'text/event-stream';
-    headers.set('Content-Type', contentType);
+    headers.set(
+      'Content-Type',
+      upstreamResponse.headers.get('content-type') || 'application/json'
+    );
     headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const vary = upstreamResponse.headers.get('vary');
-    if (vary) headers.set('Vary', vary);
 
-    return new Response(upstreamResponse.body, {
+    const body = await upstreamResponse.text();
+    return new Response(body, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers,
     });
   } catch (error) {
-    console.error('Proxy /api/chat error:', error);
+    console.error('Proxy /api/chat/history error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to reach upstream chat service' }),
+      JSON.stringify({ error: 'Failed to fetch chat history' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
