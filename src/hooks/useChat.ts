@@ -28,7 +28,8 @@ export function useChat() {
     (sessionId: string) => {
       const app_name = process.env.NEXT_PUBLIC_APP_NAME || "edi_agent";
       const user_id = session?.user?.email || "";
-      const baseUrl = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
       console.log("baseUrl", baseUrl);
       fetch(
         `${baseUrl}/api/chat/history?session_id=${sessionId}&app_name=${app_name}&user_id=${user_id}`
@@ -38,17 +39,20 @@ export function useChat() {
           return response.json();
         })
         .then((data) => {
-          const messages = data.messages.map((message: Message) => ({
-            id: message.id,
-            text: message.text,
-            sender: message.sender,
-            files: message.files,
-            timestamp: new Date(message.timestamp),
-          }));
-          setChatState((prev) => ({
-            ...prev,
-            messages: messages,
-          }));
+          if (data.messages) {
+            const messages = data.messages.map((message: Message) => ({
+              id: message.id,
+              text: message.text,
+              sender: message.sender,
+              files: message.files,
+              timestamp: new Date(message.timestamp),
+            }));
+            console.log("messages", messages);
+            setChatState((prev) => ({
+              ...prev,
+              messages: messages,
+            }));
+          }
         });
     },
     [session?.user?.email]
@@ -105,14 +109,7 @@ export function useChat() {
     [generateId]
   );
 
-  const updateMessage = useCallback((id: string, text: string) => {
-    setChatState((prev) => ({
-      ...prev,
-      messages: prev.messages.map((msg) =>
-        msg.id === id ? { ...msg, text } : msg
-      ),
-    }));
-  }, []);
+  // Removed updateMessage since streaming now appends tokens as new AI messages for simplicity
 
   const sendMessage = useCallback(
     async (text: string, files?: File[]) => {
@@ -133,10 +130,10 @@ export function useChat() {
 
       try {
         // Create AI message placeholder
-        const aiMessageId = addMessage({
-          text: "",
-          sender: "ai",
-        });
+        // const aiMessageId = addMessage({
+        //   text: "",
+        //   sender: "ai",
+        // });
 
         // Prepare form data for API call
         const formData = new FormData();
@@ -166,10 +163,8 @@ export function useChat() {
           }
         }
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_CHAT_API_URL || "http://0.0.0.0:9001";
-
-        const response = await fetch(`${baseUrl}/api/chat`, {
+        // Call our internal Next.js API route to avoid exposing API keys
+        const response = await fetch(`/api/chat`, {
           method: "POST",
           body: formData,
           redirect: "follow",
@@ -204,12 +199,18 @@ export function useChat() {
                 const data = trimmed.slice(6).trim();
                 if (data && data !== "[DONE]") {
                   accumulatedText += data + " ";
-                  updateMessage(aiMessageId, accumulatedText.trim());
+                  addMessage({
+                    text: accumulatedText.trim(),
+                    sender: "ai",
+                  });
                 }
               } else {
                 // Fallback: treat as plain text stream
                 accumulatedText += trimmed + " ";
-                updateMessage(aiMessageId, accumulatedText.trim());
+                addMessage({
+                  text: accumulatedText.trim(),
+                  sender: "ai",
+                });
               }
             }
           }
@@ -218,12 +219,15 @@ export function useChat() {
           let finalText = "";
           try {
             const json = await response.json();
-            finalText =
-              json.message || json.reply || json.data || JSON.stringify(json);
+            finalText = json.message || json.reply || json.data || "";
+            console.log("finalText", finalText);
           } catch {
             finalText = await response.text();
           }
-          updateMessage(aiMessageId, finalText || "");
+          addMessage({
+            text: finalText || "",
+            sender: "ai",
+          });
         }
       } catch (error) {
         console.error("Error sending message:", error);
@@ -240,7 +244,7 @@ export function useChat() {
         }));
       }
     },
-    [addMessage, updateMessage, session?.user?.email]
+    [addMessage, session?.user?.email]
   );
 
   const clearChat = useCallback(async () => {

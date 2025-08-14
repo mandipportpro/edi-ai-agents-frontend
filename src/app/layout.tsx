@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Chat",
-  description: "AI-powered chat application with file upload support",
+  title: "EDI AI Chat",
+  description: "EDI AI Chat",
 };
 
 export default function RootLayout({

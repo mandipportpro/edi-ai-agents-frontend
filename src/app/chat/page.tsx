@@ -1,18 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Sidebar } from '@/components/Sidebar';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
+import { Header } from '@/components/Header';
 import { useChat } from '@/hooks/useChat';
 
 export default function ChatPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [currentChatId, setCurrentChatId] = useState<string>('');
   const { messages, isLoading, isStreaming, sendMessage, clearChat } = useChat();
 
   useEffect(() => {
@@ -33,31 +31,13 @@ export default function ChatPage() {
     return null;
   }
 
-  const handleNewChat = () => {
-    clearChat();
-    setCurrentChatId('');
-  };
-
-  const handleSelectChat = (chatId: string) => {
-    setCurrentChatId(chatId);
-    // In a real app, you would load the chat messages for this chat ID
-    console.log('Selected chat:', chatId);
-  };
-
   return (
-    <div className="flex h-screen bg-gray-900">
-      {/* Sidebar */}
-      <Sidebar 
-        onNewChat={handleNewChat}
-        onSelectChat={handleSelectChat}
-        currentChatId={currentChatId}
-      />
-      
-      {/* Main Chat Area */}
+    <div className="flex h-screen flex-col bg-gray-900">
+      <Header onClearChat={clearChat} />
       <div className="flex-1 flex flex-col min-w-0">
         <ChatMessages messages={messages} isStreaming={isStreaming} />
-        <ChatInput 
-          onSendMessage={sendMessage} 
+        <ChatInput
+          onSendMessage={sendMessage}
           isLoading={isLoading}
           isStreaming={isStreaming}
         />

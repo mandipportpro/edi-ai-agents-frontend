@@ -38,10 +38,10 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
   // Typed markdown renderers to enforce wrapping
   const markdownComponents: Components = {
     p({ ...props }) {
-      return <p className="whitespace-pre-wrap break-words leading-relaxed" {...props} />;
+      return <p className="break-words leading-relaxed" {...props} />;
     },
     pre({ ...props }) {
-      return <pre className="whitespace-pre-wrap break-words" {...props} />;
+      return <pre className="break-words" {...props} />;
     },
     code(props) {
       const { inline, className, children, ...rest } = props as CodeProps;
@@ -53,7 +53,7 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
         );
       }
       return (
-        <code className={`break-words whitespace-pre-wrap ${className ?? ''}`} {...rest}>
+        <code className={`break-words ${className ?? ''}`} {...rest}>
           {children}
         </code>
       );
@@ -68,10 +68,10 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
             <SparklesIcon className="w-12 h-12 text-white" />
           </div>
           <h2 className="text-3xl font-semibold text-white mb-4">
-            How can I help you today?
+            How can I help you today with your EDI files?
           </h2>
           <p className="text-gray-400 max-w-md text-lg">
-            Start a conversation, upload files, or ask me anything. I&apos;m here to assist you with a wide range of tasks.
+            Start a conversation, upload files, or ask me to generate EDI mappings. I&apos;m here to assist you with a wide range of EDI tasks.
           </p>
         </div>
       ) : (
@@ -126,7 +126,7 @@ export function ChatMessages({ messages, isStreaming }: ChatMessagesProps) {
                   {/* Message text */}
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
-                    className={`prose prose-sm max-w-none break-words whitespace-pre-wrap ${
+                    className={`prose prose-sm max-w-none break-words ${
                       message.sender === 'user' ? 'prose-invert' : 'prose-gray prose-invert'
                     }`}
                     components={markdownComponents}
